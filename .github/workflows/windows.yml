@@ -1,0 +1,81 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download hiddify-core prebuilt binaries
+        shell: bash
+        run: |
+          mkdir -p hiddify-core/bin
+          curl -L -o hiddify-core.tar.gz https://github.com/hiddify/hiddify-core/releases/download/v4.1.0/hiddify-lib-windows-amd64.tar.gz
+          tar -xzf hiddify-core.tar.gz -C hiddify-core/bin
+          ls -la hiddify-core/bin/
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.5'
+          channel: 'stable'
+          cache: true
+
+      - name: Enable Windows desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Generate code (build_runner)
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Disable Windows Defender realtime scan (workaround for LNK1327)
+        shell: pwsh
+        run: |
+          Set-MpPreference -DisableRealtimeMonitoring $true -ErrorAction SilentlyContinue
+          Set-MpPreference -DisableScriptScanning $true -ErrorAction SilentlyContinue
+          Set-MpPreference -DisableArchiveScanning $true -ErrorAction SilentlyContinue
+          Write-Output "Defender realtime scan disabled"
+        continue-on-error: true
+
+      - name: Build Windows release (with retry)
+        shell: pwsh
+        run: |
+          $attempts = 0
+          $maxAttempts = 3
+          $success = $false
+          while (-not $success -and $attempts -lt $maxAttempts) {
+            $attempts++
+            Write-Output "Build attempt $attempts / $maxAttempts"
+            flutter build windows --release
+            if ($LASTEXITCODE -eq 0) {
+              $success = $true
+              Write-Output "Build succeeded on attempt $attempts"
+            } else {
+              Write-Output "Attempt $attempts failed, waiting 10s before retry..."
+              Start-Sleep -Seconds 10
+            }
+          }
+          if (-not $success) {
+            Write-Output "All $maxAttempts attempts failed"
+            exit 1
+          }
+
+      - name: Build installer with Inno Setup
+        run: |
+          iscc windows\installer.iss /O"${{ github.workspace }}"
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LabsVpn-Windows-Installer
+          path: LabsVpn-Setup.exe
+          retention-days: 30

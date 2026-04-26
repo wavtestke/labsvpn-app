@@ -1,0 +1,55 @@
+name: Build macOS App
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download hiddify-core prebuilt binaries
+        run: |
+          mkdir -p hiddify-core/bin
+          curl -L -o hiddify-core.tar.gz https://github.com/hiddify/hiddify-core/releases/download/v4.1.0/hiddify-lib-macos.tar.gz
+          tar -xzf hiddify-core.tar.gz -C hiddify-core/bin
+          ls -la hiddify-core/bin/
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.5'
+          channel: 'stable'
+          cache: true
+
+      - name: Enable macOS desktop
+        run: flutter config --enable-macos-desktop
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Generate code (build_runner)
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Install CocoaPods
+        run: cd macos && pod install && cd ..
+
+      - name: Build macOS release (unsigned)
+        run: flutter build macos --release
+
+      - name: Create DMG
+        run: |
+          APP_PATH=$(find build/macos -name "*.app" -type d | head -1)
+          hdiutil create -volname "LabsVpn" -srcfolder "$APP_PATH" -ov -format UDZO LabsVpn-macOS.dmg
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LabsVpn-macOS
+          path: LabsVpn-macOS.dmg
+          retention-days: 30

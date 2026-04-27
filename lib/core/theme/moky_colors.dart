@@ -5,28 +5,28 @@ import 'package:flutter/material.dart';
 class MokyColors {
   MokyColors._();
 
-  // ── DARK THEME (matches hitvpn.html :root vars 1-to-1) ──
-  static const darkBg = Color(0xFF0F0F10);
-  static const darkS1 = Color(0xFF1A1A1C);
-  static const darkS2 = Color(0xFF222226);
-  static const darkS3 = Color(0xFF2A2A2E);
-  static const darkB1 = Color(0xFF2A2A2D);
-  static const darkB2 = Color(0xFF343438);
-  static const darkAccent = Color(0xFF5B8EFF);
-  static const darkText = Color(0xFFF0F0F0);
-  static const darkT2 = Color(0xFF888892);
-  static const darkT3 = Color(0xFF4A4A58);
-  static const darkGreen = Color(0xFF2DE08A);
+  // ── DARK THEME ──
+  static const darkBg = Color(0xFF121212);
+  static const darkS1 = Color(0xFF1E1E1E);
+  static const darkS2 = Color(0xFF2A2A2A);
+  static const darkS3 = Color(0xFF333333);
+  static const darkB1 = Color(0xFF2A2A2A);
+  static const darkB2 = Color(0xFF3A3A3A);
+  static const darkAccent = Color(0xFF4CAF50);
+  static const darkText = Color(0xFFFFFFFF);
+  static const darkT2 = Color(0xFFB0B0B0);
+  static const darkT3 = Color(0xFF707070);
+  static const darkGreen = Color(0xFF4CAF50);
   static const darkRed = Color(0xFFFF5F72);
 
   // ── LIGHT THEME ──
-  static const lightBg = Color(0xFFF4F5F9);
+  static const lightBg = Color(0xFFF5F5F7);
   static const lightS1 = Color(0xFFFFFFFF);
-  static const lightS2 = Color(0xFFF0F2F7);
-  static const lightS3 = Color(0xFFE8EAF0);
-  static const lightB1 = Color(0xFFE0E3EC);
-  static const lightB2 = Color(0xFFD0D4E0);
-  static const lightAccent = Color(0xFF4A7EFF);
+  static const lightS2 = Color(0xFFF0F0F2);
+  static const lightS3 = Color(0xFFE0E0E2);
+  static const lightB1 = Color(0xFFE0E0E2);
+  static const lightB2 = Color(0xFFD1D1D6);
+  static const lightAccent = Color(0xFF4CAF50);
   static const lightText = Color(0xFF111827);
   static const lightT2 = Color(0xFF6B7280);
   static const lightT3 = Color(0xFF9CA3AF);

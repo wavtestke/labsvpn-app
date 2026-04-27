@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:labsvpn/core/model/constants.dart';
 import 'package:labsvpn/core/theme/moky_colors.dart';
 import 'package:labsvpn/features/connection/model/connection_status.dart';
 import 'package:labsvpn/features/connection/notifier/connection_notifier.dart';
@@ -11,6 +12,7 @@ import 'package:labsvpn/hiddifycore/generated/v2/hcore/hcore.pb.dart';
 import 'package:labsvpn/utils/number_formatters.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends HookConsumerWidget {
   const HomePage({super.key});
@@ -21,13 +23,7 @@ class HomePage extends HookConsumerWidget {
     final connectionStatus = ref.watch(connectionNotifierProvider);
     final stats = ref.watch(statsNotifierProvider).asData?.value ?? SystemInfo.create();
 
-    // Stable user ID computed once per session (was DateTime.now() → grew on every rebuild)
-    final userId = useMemoized(
-      () => 'V${DateTime.now().millisecondsSinceEpoch ~/ 1000 % 1000000000}',
-      const [],
-    );
-
-    // Safety net: if no profile exists, redirect to intro
+    // Redirect to intro if no profile
     final hasAnyProfile = ref.watch(hasAnyProfileProvider);
     if (hasAnyProfile.valueOrNull == false) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -36,112 +32,71 @@ class HomePage extends HookConsumerWidget {
     }
 
     final isConnected = connectionStatus.valueOrNull is Connected;
-    final isConnecting = connectionStatus.valueOrNull is Connecting || connectionStatus.valueOrNull is Disconnecting;
+    final isConnecting = connectionStatus.valueOrNull is Connecting ||
+        connectionStatus.valueOrNull is Disconnecting;
 
     return Scaffold(
       backgroundColor: mc.bg,
       body: SafeArea(
         child: Column(
           children: [
-            // ── Top bar ──
             _TopBar(mc: mc),
-
-            // ── Main scrollable content ──
             Expanded(
               child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-                    // Hint text
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
-                      child: Text(
-                        isConnected
-                            ? 'Нажмите на кнопку, чтобы отключить VPN'
-                            : isConnecting
-                                ? 'Устанавливаем защищённое соединение...'
-                                : 'Нажмите на кнопку, чтобы включить VPN',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isConnected ? mc.green : mc.t2,
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
+                    const Gap(32),
 
-                    // Power button + status text
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 32),
-                      child: Column(
-                        children: [
-                          const ConnectionButton(),
-                          const Gap(16),
-                          AnimatedDefaultTextStyle(
-                            duration: const Duration(milliseconds: 300),
-                            style: TextStyle(
-                              fontFamily: 'Unbounded',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.3,
-                              color: isConnected
-                                  ? mc.green
-                                  : isConnecting
-                                      ? mc.accent
-                                      : mc.t2,
-                            ),
-                            child: Text(
-                              isConnected
-                                  ? 'VPN включён'
-                                  : isConnecting
-                                      ? 'Подключение...'
-                                      : 'VPN отключён',
-                            ),
-                          ),
-                        ],
+                    // Status text
+                    Text(
+                      isConnected
+                          ? 'Подключено'
+                          : isConnecting
+                              ? 'Подключение...'
+                              : 'Не подключено',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: mc.text,
                       ),
                     ),
+                    const Gap(4),
+                    Text(
+                      isConnected
+                          ? 'VLESS Reality'
+                          : isConnecting
+                              ? 'Устанавливаем соединение'
+                              : 'Нажмите для подключения',
+                      style: TextStyle(fontSize: 13, color: mc.t3),
+                    ),
+                    const Gap(32),
 
-                    // ── Stats row ──
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          _StatCard(label: 'ПОЛУЧЕНО', value: stats.downlinkTotal.toInt().size(), mc: mc),
-                          const Gap(10),
-                          _StatCard(label: 'ОТПРАВЛЕНО', value: stats.uplinkTotal.toInt().size(), mc: mc),
-                        ],
-                      ),
-                    ),
-                    const Gap(16),
+                    // Power button
+                    const ConnectionButton(),
+                    const Gap(32),
 
-                    // ── User ID row ──
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: mc.s1,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: mc.b1),
+                    // Server card
+                    _ServerCard(mc: mc),
+                    const Gap(12),
+
+                    // Stats row
+                    Row(
+                      children: [
+                        _StatCard(
+                          label: 'Скачано',
+                          value: stats.downlinkTotal.toInt().size(),
+                          mc: mc,
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Ваш ID', style: TextStyle(fontSize: 12, color: mc.t2)),
-                            Text(
-                              userId,
-                              style: TextStyle(
-                                fontFamily: 'monospace',
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: mc.accent,
-                              ),
-                            ),
-                          ],
+                        const Gap(12),
+                        _StatCard(
+                          label: 'Отправлено',
+                          value: stats.uplinkTotal.toInt().size(),
+                          mc: mc,
                         ),
-                      ),
+                      ],
                     ),
-                    const Gap(16),
+                    const Gap(24),
                   ],
                 ),
               ),
@@ -153,54 +108,52 @@ class HomePage extends HookConsumerWidget {
   }
 }
 
-// ── Top bar with settings gear icon (matches HTML .topbar) ──
 class _TopBar extends StatelessWidget {
   const _TopBar({required this.mc});
   final MokyThemeData mc;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: BoxDecoration(
-        color: mc.bg.withValues(alpha: 0.94),
-        border: Border(bottom: BorderSide(color: mc.b1)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
         children: [
-          Text(
-            'labs',
-            style: TextStyle(
-              fontFamily: 'Unbounded',
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.5,
-              color: mc.text,
-            ),
-          ),
-          Text(
-            'vpn',
-            style: TextStyle(
-              fontFamily: 'Unbounded',
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.5,
-              color: mc.accent,
+          // Telegram icon
+          GestureDetector(
+            onTap: () => launchUrl(Uri.parse(Constants.telegramBotUrl)),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: mc.s1,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.telegram, size: 22, color: mc.t2),
             ),
           ),
           const Spacer(),
-          // Settings gear icon (matches HTML .settings-ico)
+          // App name
+          Text(
+            'LabsVpn',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
+              color: mc.text,
+            ),
+          ),
+          const Spacer(),
+          // Plus button
           GestureDetector(
-            onTap: () => context.go('/settings'),
+            onTap: () => context.go('/intro'),
             child: Container(
-              width: 36,
-              height: 36,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: mc.s1,
-                borderRadius: BorderRadius.circular(11),
-                border: Border.all(color: mc.b1),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.settings_outlined, size: 18, color: mc.t2),
+              child: Icon(Icons.add, size: 22, color: mc.t2),
             ),
           ),
         ],
@@ -209,7 +162,52 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-// ── Stat card (matches HTML .stat-card) ──
+class _ServerCard extends ConsumerWidget {
+  const _ServerCard({required this.mc});
+  final MokyThemeData mc;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      onTap: () => context.go('/servers'),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: mc.s1,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            const Text('🇳🇱', style: TextStyle(fontSize: 22)),
+            const Gap(12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Netherlands',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: mc.text,
+                    ),
+                  ),
+                  Text(
+                    '32 ms',
+                    style: TextStyle(fontSize: 12, color: mc.t3),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, size: 20, color: mc.t3),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _StatCard extends StatelessWidget {
   const _StatCard({required this.label, required this.value, required this.mc});
   final String label;
@@ -220,39 +218,28 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: mc.s1,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: mc.b1),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              label,
+              value,
               style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.8,
-                color: mc.t3,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: mc.text,
               ),
             ),
-            const Gap(6),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                value,
-                maxLines: 1,
-                softWrap: false,
-                style: TextStyle(
-                  fontFamily: 'Unbounded',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: mc.text,
-                  letterSpacing: -0.3,
-                ),
+            const Gap(3),
+            Text(
+              label.toUpperCase(),
+              style: TextStyle(
+                fontSize: 10,
+                color: mc.t3,
+                letterSpacing: 0.5,
               ),
             ),
           ],

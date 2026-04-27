@@ -82,8 +82,11 @@ class MyAdaptiveLayout extends HookConsumerWidget {
                   Expanded(child: navigationShell),
                 ],
               ),
-        // Bottom nav hidden on mobile — settings are accessed via gear icon in top bar
-        bottomNavigationBar: null,
+        bottomNavigationBar: _MokyBottomNav(
+          mc: mc,
+          currentIndex: navigationShell.currentIndex,
+          onTap: (index) => _onTap(context, index),
+        ),
       ),
     );
   }

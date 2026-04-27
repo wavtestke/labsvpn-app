@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -33,13 +35,12 @@ class Breakpoint {
   static const eDesktop = double.infinity;
 
   Breakpoint(BuildContext context) {
+    // Always use mobile layout — keeps consistent UI across all platforms
     _width = MediaQuery.of(context).size.width;
-    if (_width < eMobile) {
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux || _width < eTable) {
       activeBreakpoint = Breakpoints.mobile;
-    } else if (_width < eTable) {
-      activeBreakpoint = Breakpoints.tablet;
     } else {
-      activeBreakpoint = Breakpoints.desktop;
+      activeBreakpoint = Breakpoints.mobile;
     }
   }
 

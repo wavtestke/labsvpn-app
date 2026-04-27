@@ -169,7 +169,7 @@ class _TopBar extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            'moky',
+            'labs',
             style: TextStyle(
               fontFamily: 'Unbounded',
               fontSize: 18,

@@ -64,7 +64,7 @@ class SettingsPage extends HookConsumerWidget {
                     ),
                   ),
                   Text(
-                    'moky',
+                    'labs',
                     style: TextStyle(fontFamily: 'Unbounded', fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: -0.5, color: mc.text),
                   ),
                   Text(

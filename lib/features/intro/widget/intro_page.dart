@@ -113,7 +113,7 @@ class IntroPage extends HookConsumerWidget with PresLogger {
                   child: Row(
                     children: [
                       Text(
-                        'moky',
+                        'labs',
                         style: TextStyle(
                           fontFamily: 'Unbounded',
                           fontSize: 18,
@@ -188,7 +188,7 @@ class IntroPage extends HookConsumerWidget with PresLogger {
                             color: mc.text,
                           ),
                           decoration: InputDecoration(
-                            hintText: 'https://mokyvpn.app/config/...',
+                            hintText: 'https://labsvpn.app/config/...',
                             hintStyle: TextStyle(color: mc.t3, fontFamily: 'monospace', fontSize: 13),
                             errorText: linkError.value,
                             filled: true,

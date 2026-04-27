@@ -8,9 +8,9 @@ abstract class Constants {
   static const githubReleasesApiUrl = "https://api.github.com/repos/hiddify/hiddify-next/releases";
   static const githubLatestReleaseUrl = "https://github.com/hiddify/hiddify-app/releases/latest";
   static const appCastUrl = "https://raw.githubusercontent.com/hiddify/hiddify-next/main/appcast.xml";
-  static const telegramChannelUrl = "https://t.me/mokyvpnbot";
-  static const telegramBotUrl = "https://t.me/mokyvpnbot";
-  static const supportUrl = "https://t.me/mokyvpnbot";
+  static const telegramChannelUrl = "https://t.me/LabsVpnBot";
+  static const telegramBotUrl = "https://t.me/LabsVpnBot";
+  static const supportUrl = "https://t.me/LabsVpnBot";
   static const privacyPolicyUrl = "https://labsvpn.com/privacy";
   static const termsAndConditionsUrl = "https://labsvpn.com/terms";
   static const cfWarpPrivacyPolicy = "https://www.cloudflare.com/application/privacypolicy/";

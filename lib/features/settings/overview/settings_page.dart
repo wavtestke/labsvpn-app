@@ -3,7 +3,9 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:labsvpn/core/model/constants.dart';
 import 'package:labsvpn/core/preferences/general_preferences.dart';
+import 'package:labsvpn/core/theme/app_theme_mode.dart';
 import 'package:labsvpn/core/theme/moky_colors.dart';
+import 'package:labsvpn/core/theme/theme_preferences.dart';
 import 'package:labsvpn/features/connection/notifier/connection_notifier.dart';
 import 'package:labsvpn/features/profile/data/profile_data_providers.dart';
 import 'package:labsvpn/utils/utils.dart';
@@ -63,7 +65,9 @@ class SettingsPage extends HookConsumerWidget {
                     value: isDark,
                     mc: mc,
                     onChanged: (_) {
-                      ref.read(Preferences.darkMode.notifier).update(!isDark);
+                      ref.read(themePreferencesProvider.notifier).changeThemeMode(
+                        isDark ? AppThemeMode.light : AppThemeMode.dark,
+                      );
                     },
                   ),
                 ),

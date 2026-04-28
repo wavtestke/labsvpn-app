@@ -245,7 +245,7 @@ class _TopBar extends HookConsumerWidget {
 
 void _addProfile(BuildContext context, WidgetRef ref, String link, MokyThemeData mc) async {
   try {
-    await ref.read(profileNotifierProvider.notifier).addProfile(link);
+    await ref.read(addProfileNotifierProvider.notifier).addClipboard(link);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

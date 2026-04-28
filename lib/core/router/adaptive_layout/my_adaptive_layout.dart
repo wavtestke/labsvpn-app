@@ -92,7 +92,7 @@ class MyAdaptiveLayout extends HookConsumerWidget {
   }
 
   void _onTap(BuildContext context, int index) {
-    navigationShell.goBranch(index, initialLocation: index == navigationShell.currentIndex);
+    navigationShell.goBranch(index, initialLocation: true);
   }
 
   List<ShellRouteAction> _actions(Translations t, bool showProfilesAction, bool isMobileBreakpoint) => [

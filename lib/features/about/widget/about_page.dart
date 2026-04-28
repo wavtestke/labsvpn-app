@@ -28,7 +28,7 @@ class AboutPage extends HookConsumerWidget {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.go('/'),
+                    onTap: () => context.canPop() ? context.pop() : context.goNamed('settings'),
                     child: Container(
                       width: 36,
                       height: 36,

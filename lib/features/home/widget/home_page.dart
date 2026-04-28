@@ -25,6 +25,7 @@ class HomePage extends HookConsumerWidget {
     final mc = MokyThemeData.of(context);
     final connectionStatus = ref.watch(connectionNotifierProvider);
     final stats = ref.watch(statsNotifierProvider).asData?.value ?? SystemInfo.create();
+    final showMenu = useState(false);
 
     // Redirect to intro if no profile
     final hasAnyProfile = ref.watch(hasAnyProfileProvider);
@@ -41,69 +42,89 @@ class HomePage extends HookConsumerWidget {
     return Scaffold(
       backgroundColor: mc.bg,
       body: SafeArea(
-        child: Column(
+        child: Stack(
+          clipBehavior: Clip.none,
           children: [
-            _TopBar(mc: mc),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    const Gap(32),
-
-                    // Status text
-                    Text(
-                      isConnected
-                          ? 'Подключено'
-                          : isConnecting
-                              ? 'Подключение...'
-                              : 'Не подключено',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: mc.text,
-                      ),
-                    ),
-                    const Gap(4),
-                    Text(
-                      isConnected
-                          ? 'VLESS Reality'
-                          : isConnecting
-                              ? 'Устанавливаем соединение'
-                              : 'Нажмите для подключения',
-                      style: TextStyle(fontSize: 13, color: mc.t3),
-                    ),
-                    const Gap(32),
-
-                    // Power button
-                    const ConnectionButton(),
-                    const Gap(32),
-
-                    // Server card
-                    _ServerCard(mc: mc),
-                    const Gap(12),
-
-                    // Stats row
-                    Row(
+            Column(
+              children: [
+                _TopBar(mc: mc, showMenu: showMenu),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
                       children: [
-                        _StatCard(
-                          label: 'Скачано',
-                          value: stats.downlinkTotal.toInt().size(),
-                          mc: mc,
+                        const Gap(32),
+
+                        // Status text
+                        Text(
+                          isConnected
+                              ? 'Подключено'
+                              : isConnecting
+                                  ? 'Подключение...'
+                                  : 'Не подключено',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: mc.text,
+                          ),
                         ),
+                        const Gap(4),
+                        Text(
+                          isConnected
+                              ? 'VLESS Reality'
+                              : isConnecting
+                                  ? 'Устанавливаем соединение'
+                                  : 'Нажмите для подключения',
+                          style: TextStyle(fontSize: 13, color: mc.t3),
+                        ),
+                        const Gap(32),
+
+                        // Power button
+                        const ConnectionButton(),
+                        const Gap(32),
+
+                        // Server card
+                        _ServerCard(mc: mc),
                         const Gap(12),
-                        _StatCard(
-                          label: 'Отправлено',
-                          value: stats.uplinkTotal.toInt().size(),
-                          mc: mc,
+
+                        // Stats row
+                        Row(
+                          children: [
+                            _StatCard(
+                              label: 'Скачано',
+                              value: stats.downlinkTotal.toInt().size(),
+                              mc: mc,
+                            ),
+                            const Gap(12),
+                            _StatCard(
+                              label: 'Отправлено',
+                              value: stats.uplinkTotal.toInt().size(),
+                              mc: mc,
+                            ),
+                          ],
                         ),
+                        const Gap(24),
                       ],
                     ),
-                    const Gap(24),
-                  ],
+                  ),
+                ),
+              ],
+            ),
+
+            // Dropdown overlay — поверх всего контента
+            if (showMenu.value) ...[
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () => showMenu.value = false,
                 ),
               ),
-            ),
+              Positioned(
+                top: 56,
+                right: 20,
+                child: _DropdownMenu(mc: mc, showMenu: showMenu, ref: ref),
+              ),
+            ],
           ],
         ),
       ),
@@ -111,15 +132,68 @@ class HomePage extends HookConsumerWidget {
   }
 }
 
-class _TopBar extends HookConsumerWidget {
-  const _TopBar({required this.mc});
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.mc, required this.showMenu});
   final MokyThemeData mc;
+  final ValueNotifier<bool> showMenu;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final showMenu = useState(false);
-    final linkController = useTextEditingController();
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        children: [
+          // Telegram icon
+          GestureDetector(
+            onTap: () => launchUrl(Uri.parse(Constants.telegramBotUrl)),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: mc.s1,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.telegram, size: 22, color: mc.t2),
+            ),
+          ),
+          const Spacer(),
+          Text(
+            'LabsVpn',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
+              color: mc.text,
+            ),
+          ),
+          const Spacer(),
+          // Plus button
+          GestureDetector(
+            onTap: () => showMenu.value = !showMenu.value,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: mc.s1,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.add, size: 22, color: mc.t2),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
+class _DropdownMenu extends ConsumerWidget {
+  const _DropdownMenu({required this.mc, required this.showMenu, required this.ref});
+  final MokyThemeData mc;
+  final ValueNotifier<bool> showMenu;
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context, WidgetRef _) {
     void openManualInput() {
       showMenu.value = false;
       showModalBottomSheet(
@@ -138,107 +212,41 @@ class _TopBar extends HookConsumerWidget {
       _addProfile(context, ref, text, mc);
     }
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Row(
-            children: [
-              // Telegram icon
-              GestureDetector(
-                onTap: () => launchUrl(Uri.parse(Constants.telegramBotUrl)),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: mc.s1,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(Icons.telegram, size: 22, color: mc.t2),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                'LabsVpn',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.3,
-                  color: mc.text,
-                ),
-              ),
-              const Spacer(),
-              // Plus button
-              GestureDetector(
-                onTap: () => showMenu.value = !showMenu.value,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: mc.s1,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(Icons.add, size: 22, color: mc.t2),
-                ),
-              ),
-            ],
-          ),
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        width: 210,
+        decoration: BoxDecoration(
+          color: mc.s1,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
-        // Dropdown menu
-        if (showMenu.value)
-          Positioned(
-            top: 56,
-            right: 20,
-            child: Material(
-              color: Colors.transparent,
-              child: GestureDetector(
-                onTap: () {},
-                child: Container(
-                  width: 210,
-                  decoration: BoxDecoration(
-                    color: mc.s1,
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _MenuItem(
-                        icon: Icons.edit_outlined,
-                        label: 'Ввести вручную',
-                        mc: mc,
-                        onTap: openManualInput,
-                        showBorder: false,
-                      ),
-                      _MenuItem(
-                        icon: Icons.content_paste_outlined,
-                        label: 'Добавить из буфера',
-                        mc: mc,
-                        onTap: pasteFromClipboard,
-                        showBorder: true,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _MenuItem(
+              icon: Icons.edit_outlined,
+              label: 'Ввести вручную',
+              mc: mc,
+              onTap: openManualInput,
+              showBorder: false,
             ),
-          ),
-        // Overlay to close menu
-        if (showMenu.value)
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: () => showMenu.value = false,
+            _MenuItem(
+              icon: Icons.content_paste_outlined,
+              label: 'Добавить из буфера',
+              mc: mc,
+              onTap: pasteFromClipboard,
+              showBorder: true,
             ),
-          ),
-      ],
+          ],
+        ),
+      ),
     );
   }
 }

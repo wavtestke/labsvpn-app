@@ -123,17 +123,10 @@ class SettingsPage extends HookConsumerWidget {
             ),
             const Gap(8),
 
-            // Group 3: logs, about
+            // Group 3: about
             _SettingsGroup(
               mc: mc,
               children: [
-                _SettingsItem(
-                  mc: mc,
-                  icon: Icons.list_alt_outlined,
-                  title: 'Логи',
-                  showArrow: true,
-                  onTap: () {},
-                ),
                 _SettingsItem(
                   mc: mc,
                   icon: Icons.info_outline,

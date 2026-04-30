@@ -17,7 +17,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p hiddify-core/bin
-          curl -L -o hiddify-core.tar.gz https://github.com/hiddify/hiddify-core/releases/download/v4.1.0/hiddify-lib-windows-amd64.tar.gz
+          curl -L --retry 5 --retry-delay 5 -o hiddify-core.tar.gz https://github.com/hiddify/hiddify-core/releases/download/v4.1.0/hiddify-lib-windows-amd64.tar.gz
           tar -xzf hiddify-core.tar.gz -C hiddify-core/bin
           ls -la hiddify-core/bin/
 

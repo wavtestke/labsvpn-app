@@ -23,16 +23,7 @@ class _ServerData {
 const _servers = [
   _ServerData(flag: '🇳🇱', country: 'Нидерланды', city: 'Amsterdam', ping: 31, id: 'nl'),
   _ServerData(flag: '🇩🇪', country: 'Германия', city: 'Frankfurt', ping: 24, id: 'de'),
-  _ServerData(flag: '🇫🇮', country: 'Финляндия', city: 'Helsinki', ping: 18, id: 'fi'),
   _ServerData(flag: '🇺🇸', country: 'США', city: 'New York', ping: 87, id: 'us'),
-  _ServerData(flag: '🇬🇧', country: 'Великобритания', city: 'London', ping: 45, id: 'gb'),
-  _ServerData(flag: '🇯🇵', country: 'Япония', city: 'Tokyo', ping: 142, id: 'jp'),
-  _ServerData(flag: '🇸🇬', country: 'Сингапур', city: 'Singapore', ping: 115, id: 'sg'),
-  _ServerData(flag: '🇨🇭', country: 'Швейцария', city: 'Zurich', ping: 38, id: 'ch'),
-  _ServerData(flag: '🇸🇪', country: 'Швеция', city: 'Stockholm', ping: 22, id: 'se'),
-  _ServerData(flag: '🇨🇦', country: 'Канада', city: 'Toronto', ping: 96, id: 'ca'),
-  _ServerData(flag: '🇦🇺', country: 'Австралия', city: 'Sydney', ping: 178, id: 'au'),
-  _ServerData(flag: '🇫🇷', country: 'Франция', city: 'Paris', ping: 42, id: 'fr'),
 ];
 
 class GeoBottomSheet extends HookConsumerWidget {
